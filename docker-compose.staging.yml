@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: production
+    environment:
+      - NODE_ENV=staging
+    env_file:
+      - .env.staging
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - ai-agents-staging
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
+
+  mongo:
+    image: mongo:7.0
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE}
+    volumes:
+      - mongo_data_staging:/data/db
+    networks:
+      - ai-agents-staging
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data_staging:/data
+    networks:
+      - ai-agents-staging
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.staging.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - ai-agents-staging
+    restart: unless-stopped
+
+volumes:
+  mongo_data_staging:
+  redis_data_staging:
+
+networks:
+  ai-agents-staging:
+    driver: bridge
