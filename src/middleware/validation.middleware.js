@@ -1,19 +1,19 @@
 const Joi = require('joi');
 const { ValidationError } = require('../utils/errors');
-const { catchAsync } = require('./error.middleware');
+const { catchAsync } = require('./error.middleware.js');
 
 const validate = (schema, property = 'body') => {
   return catchAsync(async (req, res, next) => {
     const { error, value } = schema.validate(req[property], {
       abortEarly: false,
-      stripUnknown: true
+      stripUnknown: true,
     });
 
     if (error) {
       const errorMessage = error.details
-        .map(detail => detail.message.replace(/"/g, ''))
+        .map((detail) => detail.message.replace(/"/g, ''))
         .join(', ');
-      
+
       throw new ValidationError(errorMessage);
     }
 
@@ -30,5 +30,5 @@ module.exports = {
   validate,
   validateQuery,
   validateParams,
-  validateBody
+  validateBody,
 };

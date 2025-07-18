@@ -1,3 +1,4 @@
+/* eslint-disable global-require */
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -19,17 +20,19 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+      },
     },
-  },
-  crossOriginEmbedderPolicy: false
-}));
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // CORS
 app.use(cors(config.security.cors));
@@ -41,10 +44,10 @@ if (config.security.rateLimiting.enabled) {
     max: config.security.rateLimiting.maxRequests,
     message: {
       error: 'Too many requests from this IP, please try again later.',
-      retryAfter: Math.ceil(config.security.rateLimiting.windowMs / 1000)
+      retryAfter: Math.ceil(config.security.rateLimiting.windowMs / 1000),
     },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
   });
   app.use('/api', limiter);
 }
@@ -69,7 +72,7 @@ app.use((req, res, next) => {
     method: req.method,
     url: req.url,
     ip: req.ip,
-    userAgent: req.get('User-Agent')
+    userAgent: req.get('User-Agent'),
   });
   next();
 });
@@ -78,11 +81,11 @@ app.use((req, res, next) => {
 app.use('/api/v1', routes);
 
 // API documentation (in production, you might want to restrict this)
-if (!config.isProduction) {
-  const swaggerUi = require('swagger-ui-express');
-  const swaggerDocument = require('./docs/swagger.json');
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-}
+// if (!config.isProduction) {
+//   const swaggerUi = require('swagger-ui-express');
+//   const swaggerDocument = require('./docs/swagger.json');
+//   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// }
 
 // Handle 404
 app.use(handleNotFound);

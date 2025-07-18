@@ -4,6 +4,8 @@ const logger = require('./config/logger');
 const database = require('./config/database');
 const redisClient = require('./config/redis');
 
+let server;
+
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
   logger.error('UNCAUGHT EXCEPTION! 💥 Shutting down...', err);
@@ -30,20 +32,20 @@ async function startServer() {
   try {
     // Connect to database
     await database.connect();
-    
+
     // Connect to Redis
     redisClient.connect();
-    
+
     // Start server
-    const server = app.listen(config.port, () => {
+    server = app.listen(config.port, () => {
       logger.info(`🚀 Server running on port ${config.port} in ${config.env} mode`);
       logger.info(`📚 API Documentation: http://localhost:${config.port}/api-docs`);
       logger.info(`🏥 Health Check: http://localhost:${config.port}/api/v1/health`);
     });
-    
+
     // Set server timeout
     server.timeout = 30000; // 30 seconds
-    
+
     return server;
   } catch (error) {
     logger.error('Failed to start server:', error);

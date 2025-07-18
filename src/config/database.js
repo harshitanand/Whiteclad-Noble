@@ -37,7 +37,7 @@ class Database {
 
       await mongoose.connect(config.database.uri, {
         ...config.database.options,
-        dbName: config.database.name
+        dbName: config.database.name,
       });
 
       logger.info('Database connection established');

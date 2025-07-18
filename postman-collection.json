@@ -1,0 +1,1578 @@
+{
+  "info": {
+    "name": "AI Agents Platform - Complete API Collection",
+    "description": "Production-ready AI Agents SaaS Platform with LiveKit integration for web and SIP calls",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{clerk_jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "clerk_jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organization_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "agent_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "room_name",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dispatch_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🏥 Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔐 Authentication Setup",
+      "description": "Follow these steps to get proper Clerk authentication working",
+      "item": [
+        {
+          "name": "📋 Instructions",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            },
+            "description": "AUTHENTICATION SETUP INSTRUCTIONS:\n\n1. Create test user via API (optional)\n2. Sign in through your React frontend with Clerk\n3. Get real Clerk session token from browser console:\n   ```javascript\n   // In browser console after signing in:\n   const token = await window.Clerk.session.getToken();\n   console.log('Clerk Token:', token);\n   ```\n4. Copy the token and set it as 'clerk_jwt_token' variable\n5. All protected endpoints will work automatically!\n\nAlternatively, you can:\n- Use the 'Create Test User' endpoint to create users\n- Use 'Generate Sign-In Token' for testing without frontend\n- Use 'Get Token from Headers' to extract token from any successful request"
+          },
+          "response": []
+        },
+        {
+          "name": "1. Create Test User (Optional)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ User created successfully', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('user_id', responseJson.data.user.id);",
+                  "    pm.collectionVariables.set('user_email', responseJson.data.user.email);",
+                  "    ",
+                  "    console.log('✅ Test user created');",
+                  "    console.log('📧 Email:', responseJson.data.user.email);",
+                  "    console.log('🆔 User ID:', responseJson.data.user.id);",
+                  "    console.log('');",
+                  "    console.log('🔑 NEXT STEP: Sign in through your React frontend to get session token');",
+                  "    console.log('📱 Or use the \"Generate Sign-In Token\" endpoint for testing');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test-{{$timestamp}}@example.com\",\n  \"password\": \"TestPassword123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"role\": \"org:admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/create-user",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "create-user"]
+            },
+            "description": "Creates a test user in Clerk. You'll still need to sign in through frontend to get session token."
+          }
+        },
+        {
+          "name": "2. Generate Sign-In Token (Testing)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Sign-in token generated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    console.log('✅ Sign-in token generated');",
+                  "    console.log('🎫 Token:', responseJson.data.token);",
+                  "    console.log('🔗 URL:', responseJson.data.url);",
+                  "    console.log('');",
+                  "    console.log('💡 Use this token in your frontend:');",
+                  "    console.log('await signIn.create({ strategy: \"ticket\", ticket: \"' + responseJson.data.token + '\" });');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/generate-signin-token",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "generate-signin-token"]
+            },
+            "description": "Generate a sign-in token for testing. Use this with Clerk's frontend SDK to sign in programmatically."
+          }
+        },
+        {
+          "name": "3. Get Token from Headers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Extract token from Authorization header",
+                  "const authHeader = pm.request.headers.get('Authorization');",
+                  "if (authHeader && authHeader.startsWith('Bearer ')) {",
+                  "    const token = authHeader.substring(7);",
+                  "    pm.collectionVariables.set('clerk_jwt_token', token);",
+                  "    console.log('✅ Token extracted from Authorization header');",
+                  "    console.log('🔑 Token set in collection variables');",
+                  "} else {",
+                  "    console.log('⚠️ No Authorization header found');",
+                  "    console.log('💡 Make sure to add your Clerk session token to the Authorization header');",
+                  "}",
+                  "",
+                  "pm.test('✅ Request completed', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer YOUR_CLERK_SESSION_TOKEN_HERE",
+                "description": "Paste your real Clerk session token here"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Paste your real Clerk session token in the Authorization header, then run this request to save it to collection variables."
+          }
+        },
+        {
+          "name": "4. Validate Current Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('✅ Token is valid', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "    ",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.data && responseJson.data.user) {",
+                  "        pm.collectionVariables.set('user_id', responseJson.data.user.id);",
+                  "        console.log('✅ Token validated successfully');",
+                  "        console.log('👤 Logged in as:', responseJson.data.user.email);",
+                  "        console.log('🆔 User ID:', responseJson.data.user.id);",
+                  "    }",
+                  "} else if (pm.response.code === 401) {",
+                  "    pm.test('⚠️ Token invalid or expired', function () {",
+                  "        pm.response.to.have.status(401);",
+                  "    });",
+                  "    console.log('⚠️ Token is invalid or expired');",
+                  "    console.log('💡 Please get a new token from your frontend app');",
+                  "} else {",
+                  "    pm.test('❌ Unexpected response', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Test if your current Clerk session token is valid and working."
+          }
+        },
+        {
+          "name": "5. Create Test Organization",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Organization created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.collectionVariables.set('organization_id', responseJson.data.organization.id);",
+                  "    console.log('✅ Test organization created');",
+                  "    console.log('🏢 Organization ID:', responseJson.data.organization.id);",
+                  "    console.log('📛 Name:', responseJson.data.organization.name);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Company {{$timestamp}}\",\n  \"slug\": \"test-company-{{$timestamp}}\",\n  \"createdBy\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/create-organization",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "create-organization"]
+            },
+            "description": "Create a test organization for API testing."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Clerk Webhook",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"user.created\",\n  \"data\": {\n    \"id\": \"user_2abc123\",\n    \"email_addresses\": [\n      {\n        \"email_address\": \"test@example.com\"\n      }\n    ],\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"image_url\": \"https://example.com/avatar.jpg\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "webhook"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"bio\": \"AI Enthusiast\",\n  \"preferences\": {\n    \"theme\": \"dark\",\n    \"notifications\": {\n      \"email\": true,\n      \"push\": false\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👥 User Management",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["users", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"bio\": \"Updated bio\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/profile",
+              "host": ["{{base_url}}"],
+              "path": ["users", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Preferences",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/preferences",
+              "host": ["{{base_url}}"],
+              "path": ["users", "preferences"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preferences\": {\n    \"theme\": \"dark\",\n    \"notifications\": {\n      \"email\": true,\n      \"push\": false,\n      \"marketing\": false\n    },\n    \"language\": \"en\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/preferences",
+              "host": ["{{base_url}}"],
+              "path": ["users", "preferences"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Avatar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/users/avatar",
+              "host": ["{{base_url}}"],
+              "path": ["users", "avatar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Organizations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/organizations",
+              "host": ["{{base_url}}"],
+              "path": ["users", "organizations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/stats",
+              "host": ["{{base_url}}"],
+              "path": ["users", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"currentPassword123!\",\n  \"newPassword\": \"newPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["users", "change-password"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Users (Team Lead+)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users?page=1&limit=20&search=&role=&status=active",
+              "host": ["{{base_url}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "role",
+                  "value": ""
+                },
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated Name\",\n  \"lastName\": \"Updated Last\",\n  \"role\": \"agent_creator\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}/deactivate",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}", "deactivate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reactivate User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}/reactivate",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}", "reactivate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Activity",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}/activity?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}", "activity"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏢 Organization Management",
+      "item": [
+        {
+          "name": "Get Current Organization",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/organizations",
+              "host": ["{{base_url}}"],
+              "path": ["organizations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Organization",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Organization Name\",\n  \"description\": \"Updated description\",\n  \"settings\": {\n    \"allowMemberInvites\": true,\n    \"requireApprovalForAgents\": false\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations",
+              "host": ["{{base_url}}"],
+              "path": ["organizations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Organization Members",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/organizations/members?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "members"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invite User to Organization",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"role\": \"org:member\",\n  \"message\": \"Welcome to our AI Agents platform!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations/members",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "members"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Member Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"team_lead\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/organizations/members/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "members", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Member",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/organizations/members/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "members", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Usage Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/organizations/usage",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "usage"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/organizations/audit-logs?page=1&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["organizations", "audit-logs"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🤖 AI Agents",
+      "item": [
+        {
+          "name": "List Agents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/agents?page=1&limit=20&search=&type=&status=&isPublic=",
+              "host": ["{{base_url}}"],
+              "path": ["agents"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "type",
+                  "value": ""
+                },
+                {
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "key": "isPublic",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Agent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Customer Support Agent\",\n  \"description\": \"AI agent for customer support inquiries\",\n  \"type\": \"chatbot\",\n  \"instructions\": \"You are a helpful customer support agent. Always be polite and try to resolve customer issues efficiently.\",\n  \"model\": \"gpt-4\",\n  \"temperature\": 0.7,\n  \"maxTokens\": 1000,\n  \"tags\": [\"customer-support\", \"chatbot\"],\n  \"isPublic\": false,\n  \"tools\": [\n    {\n      \"type\": \"web_search\",\n      \"config\": {\n        \"enabled\": true\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/agents",
+              "host": ["{{base_url}}"],
+              "path": ["agents"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Agent",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/agents/{{agent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agents", "{{agent_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Agent",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Agent Name\",\n  \"description\": \"Updated description\",\n  \"instructions\": \"Updated instructions for the agent\",\n  \"temperature\": 0.8,\n  \"tags\": [\"updated\", \"improved\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/agents/{{agent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agents", "{{agent_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Agent",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/agents/{{agent_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["agents", "{{agent_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Agent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/agents/{{agent_id}}/publish",
+              "host": ["{{base_url}}"],
+              "path": ["agents", "{{agent_id}}", "publish"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clone Agent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/agents/{{agent_id}}/clone",
+              "host": ["{{base_url}}"],
+              "path": ["agents", "{{agent_id}}", "clone"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Agent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hello! I need help with my account.\",\n  \"sessionId\": \"session_123\",\n  \"context\": {\n    \"userId\": \"{{user_id}}\",\n    \"previousMessages\": []\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/agents/{{agent_id}}/chat",
+              "host": ["{{base_url}}"],
+              "path": ["agents", "{{agent_id}}", "chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Agent Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/agents/{{agent_id}}/analytics",
+              "host": ["{{base_url}}"],
+              "path": ["agents", "{{agent_id}}", "analytics"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📞 LiveKit Calls & Agent Dispatch",
+      "item": [
+        {
+          "name": "Create Web Call",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agentId\": \"{{agent_id}}\",\n  \"participantName\": \"John Doe\",\n  \"enableVideo\": true,\n  \"enableAudio\": true,\n  \"duration\": 3600,\n  \"agentName\": \"Customer Support Agent\",\n  \"agentMetadata\": {\n    \"department\": \"support\",\n    \"priority\": \"high\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/calls/web",
+              "host": ["{{base_url}}"],
+              "path": ["calls", "web"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create SIP Call",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agentId\": \"{{agent_id}}\",\n  \"phoneNumber\": \"+1234567890\",\n  \"participantName\": \"Phone Caller\",\n  \"duration\": 1800,\n  \"sipOptions\": {\n    \"transport\": \"UDP\",\n    \"codec\": \"PCMU\"\n  },\n  \"agentName\": \"Phone Support Agent\",\n  \"agentMetadata\": {\n    \"callType\": \"inbound\",\n    \"department\": \"sales\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/calls/sip",
+              "host": ["{{base_url}}"],
+              "path": ["calls", "sip"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Active Calls",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/calls/active",
+              "host": ["{{base_url}}"],
+              "path": ["calls", "active"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Call Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/calls/{{room_name}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["calls", "{{room_name}}", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "End Call",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"call_completed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/calls/{{room_name}}",
+              "host": ["{{base_url}}"],
+              "path": ["calls", "{{room_name}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Agent Dispatch",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomName\": \"{{room_name}}\",\n  \"agentName\": \"Escalation Agent\",\n  \"agentId\": \"{{agent_id}}\",\n  \"metadata\": {\n    \"reason\": \"escalation\",\n    \"priority\": \"urgent\",\n    \"specialistType\": \"technical\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/calls/agent-dispatch",
+              "host": ["{{base_url}}"],
+              "path": ["calls", "agent-dispatch"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Agent Dispatches",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/calls/{{room_name}}/dispatches",
+              "host": ["{{base_url}}"],
+              "path": ["calls", "{{room_name}}", "dispatches"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Agent Dispatch",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/calls/dispatches/{{dispatch_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["calls", "dispatches", "{{dispatch_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💳 Billing & Subscriptions",
+      "item": [
+        {
+          "name": "Stripe Webhook",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "stripe-signature",
+                "value": "{{stripe_webhook_signature}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"customer.subscription.created\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"sub_123\",\n      \"customer\": \"cus_123\",\n      \"status\": \"active\",\n      \"metadata\": {\n        \"organizationId\": \"{{organization_id}}\"\n      }\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["billing", "webhook"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priceId\": \"price_pro_monthly\",\n  \"paymentMethodId\": \"pm_card_visa\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/subscription",
+              "host": ["{{base_url}}"],
+              "path": ["billing", "subscription"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Subscription",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priceId\": \"price_enterprise_monthly\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/subscription",
+              "host": ["{{base_url}}"],
+              "path": ["billing", "subscription"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancelAtPeriodEnd\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/subscription",
+              "host": ["{{base_url}}"],
+              "path": ["billing", "subscription"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Billing Portal",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "clerk-org-id",
+                "value": "{{organization_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/billing/portal?returnUrl=https://your-app.com/billing",
+              "host": ["{{base_url}}"],
+              "path": ["billing", "portal"],
+              "query": [
+                {
+                  "key": "returnUrl",
+                  "value": "https://your-app.com/billing"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set organization header if available",
+          "if (pm.collectionVariables.get('organization_id') && !pm.request.headers.has('clerk-org-id')) {",
+          "    pm.request.headers.add({",
+          "        key: 'clerk-org-id',",
+          "        value: pm.collectionVariables.get('organization_id')",
+          "    });",
+          "}",
+          "",
+          "// Log request for debugging",
+          "console.log('🚀 Request:', pm.request.method, pm.request.url.toString());",
+          "",
+          "// Add request timestamp",
+          "pm.globals.set('request_timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-extract common IDs from responses",
+          "if (pm.response.code === 200 || pm.response.code === 201) {",
+          "    try {",
+          "        const response = pm.response.json();",
+          "        ",
+          "        // Extract agent ID",
+          "        if (response.data && response.data.agent) {",
+          "            const agentId = response.data.agent._id || response.data.agent.id;",
+          "            if (agentId) {",
+          "                pm.collectionVariables.set('agent_id', agentId);",
+          "                console.log('✅ Set agent_id:', agentId);",
+          "            }",
+          "        }",
+          "        ",
+          "        // Extract user ID",
+          "        if (response.data && response.data.user) {",
+          "            const userId = response.data.user.clerkId || response.data.user.id;",
+          "            if (userId) {",
+          "                pm.collectionVariables.set('user_id', userId);",
+          "                console.log('✅ Set user_id:', userId);",
+          "            }",
+          "        }",
+          "        ",
+          "        // Extract organization ID",
+          "        if (response.data && response.data.organization) {",
+          "            const orgId = response.data.organization.clerkId || response.data.organization.id;",
+          "            if (orgId) {",
+          "                pm.collectionVariables.set('organization_id', orgId);",
+          "                console.log('✅ Set organization_id:', orgId);",
+          "            }",
+          "        }",
+          "        ",
+          "        // Extract room name from call responses",
+          "        if (response.data && response.data.roomName) {",
+          "            pm.collectionVariables.set('room_name', response.data.roomName);",
+          "            console.log('✅ Set room_name:', response.data.roomName);",
+          "        }",
+          "        ",
+          "        // Extract dispatch ID",
+          "        if (response.data && response.data.dispatch && response.data.dispatch.id) {",
+          "            pm.collectionVariables.set('dispatch_id', response.data.dispatch.id);",
+          "            console.log('✅ Set dispatch_id:', response.data.dispatch.id);",
+          "        }",
+          "        ",
+          "        // Extract token from auth responses",
+          "        if (response.data && response.data.token) {",
+          "            pm.collectionVariables.set('clerk_jwt_token', response.data.token);",
+          "            console.log('✅ Set clerk_jwt_token');",
+          "        }",
+          "        ",
+          "        // Extract subscription info",
+          "        if (response.data && response.data.subscription && response.data.subscription.id) {",
+          "            pm.collectionVariables.set('subscription_id', response.data.subscription.id);",
+          "            console.log('✅ Set subscription_id:', response.data.subscription.id);",
+          "        }",
+          "        ",
+          "    } catch (e) {",
+          "        console.log('⚠️ Could not parse response as JSON or extract variables');",
+          "    }",
+          "}",
+          "",
+          "// Log response status with emoji",
+          "const statusEmoji = pm.response.code < 300 ? '✅' : pm.response.code < 500 ? '⚠️' : '❌';",
+          "console.log(statusEmoji + ' Response:', pm.response.code, pm.response.status);",
+          "",
+          "// Calculate response time",
+          "const requestTime = pm.globals.get('request_timestamp');",
+          "if (requestTime) {",
+          "    const responseTime = new Date() - new Date(requestTime);",
+          "    console.log('⏱️ Response time:', responseTime + 'ms');",
+          "}",
+          "",
+          "// Basic tests for successful responses",
+          "if (pm.response.code === 200 || pm.response.code === 201) {",
+          "    pm.test('✅ Status code is successful', function () {",
+          "        pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "    });",
+          "    ",
+          "    pm.test('✅ Response has success field', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('success');",
+          "        pm.expect(jsonData.success).to.be.true;",
+          "    });",
+          "    ",
+          "    pm.test('✅ Response time is acceptable', function () {",
+          "        pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "    });",
+          "}",
+          "",
+          "// Test for error responses",
+          "if (pm.response.code >= 400) {",
+          "    pm.test('❌ Error response has error message', function () {",
+          "        const jsonData = pm.response.json();",
+          "        pm.expect(jsonData).to.have.property('error').or.to.have.property('message');",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ]
+}

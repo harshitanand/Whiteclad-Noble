@@ -24,16 +24,16 @@ class DatabaseConnection {
       // Connect to MongoDB
       this.connection = await mongoose.connect(config.database.uri, {
         ...config.database.options,
-        dbName: config.database.name
+        dbName: config.database.name,
       });
 
       this.isConnected = true;
       this.retryCount = 0;
-      
+
       logger.info('Database connected successfully', {
         host: this.connection.connection.host,
         port: this.connection.connection.port,
-        name: this.connection.connection.name
+        name: this.connection.connection.name,
       });
 
       return this.connection;
@@ -68,16 +68,17 @@ class DatabaseConnection {
   async handleConnectionError(error) {
     if (this.retryCount < this.maxRetries) {
       this.retryCount++;
-      const delay = Math.pow(2, this.retryCount) * 1000; // Exponential backoff
-      
-      logger.warn(`Retrying database connection in ${delay}ms (attempt ${this.retryCount}/${this.maxRetries})`);
-      
-      await new Promise(resolve => setTimeout(resolve, delay));
+      const delay = 2 ** this.retryCount * 1000; // Exponential backoff
+
+      logger.warn(
+        `Retrying database connection in ${delay}ms (attempt ${this.retryCount}/${this.maxRetries})`
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
       return this.connect();
-    } else {
-      logger.error('Max database connection retries exceeded');
-      throw error;
     }
+    logger.error('Max database connection retries exceeded');
+    throw error;
   }
 
   async disconnect() {
@@ -113,7 +114,7 @@ class DatabaseConnection {
       if (!this.isConnected) {
         return false;
       }
-      
+
       await mongoose.connection.db.admin().ping();
       return true;
     } catch (error) {

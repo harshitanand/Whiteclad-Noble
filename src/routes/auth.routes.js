@@ -1,12 +1,63 @@
 const express = require('express');
+const Joi = require('joi');
 const AuthController = require('../controllers/auth.controller');
 const { requireAuth } = require('../middleware/auth.middleware');
 const { validateBody } = require('../middleware/validation.middleware');
 const { userSchemas } = require('../utils/validation');
+
 const router = express.Router();
 
 // Webhook endpoint (no auth required)
 router.post('/webhook', AuthController.handleWebhook);
+
+router.post(
+  '/create-user',
+  validateBody(
+    Joi.object({
+      email: Joi.string().email().required(),
+      password: Joi.string().min(8).required(),
+      firstName: Joi.string().required(),
+      lastName: Joi.string().required(),
+      role: Joi.string()
+        .valid('super_admin', 'org:admin', 'team_lead', 'agent_creator', 'org:member')
+        .default('org:member'),
+      organizationId: Joi.string().optional(),
+    })
+  ),
+  AuthController.createClerkUser
+);
+
+router.post(
+  '/session',
+  validateBody(
+    Joi.object({
+      sessionToken: Joi.string().required(),
+    })
+  ),
+  AuthController.exchangeSession
+);
+
+router.post(
+  '/generate-signin-token',
+  validateBody(
+    Joi.object({
+      userId: Joi.string().required(),
+    })
+  ),
+  AuthController.generateSignInToken
+);
+
+router.post(
+  '/create-organization',
+  validateBody(
+    Joi.object({
+      name: Joi.string().required(),
+      slug: Joi.string().required(),
+      createdBy: Joi.string().required(),
+    })
+  ),
+  AuthController.createTestOrganization
+);
 
 // Protected routes
 router.use(requireAuth);
@@ -14,47 +65,6 @@ router.use(requireAuth);
 router
   .route('/profile')
   .get(AuthController.getProfile)
-  .put(
-    validateBody(userSchemas.update),
-    AuthController.updateProfile
-  );
-
-module.exports = router;
-
-// src/routes/index.js - Main router
-const express = require('express');
-const authRoutes = require('./auth.routes');
-const organizationRoutes = require('./organizations.routes');
-const agentRoutes = require('./agents.routes');
-const billingRoutes = require('./billing.routes');
-const { HTTP_STATUS } = require('../utils/constants');
-
-const router = express.Router();
-
-// Health check
-router.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV
-  });
-});
-
-// API version info
-router.get('/', (req, res) => {
-  res.json({
-    name: 'AI Agents Platform API',
-    version: '1.0.0',
-    description: 'Production-ready AI Agents SaaS Platform',
-    documentation: '/api-docs'
-  });
-});
-
-// Route handlers
-router.use('/auth', authRoutes);
-router.use('/organizations', organizationRoutes);
-router.use('/agents', agentRoutes);
-router.use('/billing', billingRoutes);
+  .put(validateBody(userSchemas.update), AuthController.updateProfile);
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const BillingService = require('../services/billing.service');
-const { catchAsync } = require('../middleware/error.middleware');
+const { catchAsync } = require('../middleware/error.middleware.js');
 const { HTTP_STATUS } = require('../utils/constants');
 const logger = require('../config/logger');
 
@@ -16,7 +16,7 @@ class BillingController {
     res.status(HTTP_STATUS.CREATED).json({
       success: true,
       message: 'Subscription created successfully',
-      data: result
+      data: result,
     });
   });
 
@@ -32,7 +32,7 @@ class BillingController {
     res.json({
       success: true,
       message: 'Subscription updated successfully',
-      data: { subscription }
+      data: { subscription },
     });
   });
 
@@ -48,7 +48,7 @@ class BillingController {
     res.json({
       success: true,
       message: 'Subscription cancelled successfully',
-      data: { subscription }
+      data: { subscription },
     });
   });
 
@@ -63,7 +63,7 @@ class BillingController {
 
     res.json({
       success: true,
-      data: { url }
+      data: { url },
     });
   });
 
@@ -76,11 +76,7 @@ class BillingController {
 
     let event;
     try {
-      event = require('stripe').webhooks.constructEvent(
-        req.body,
-        signature,
-        stripe.webhookSecret
-      );
+      event = require('stripe').webhooks.constructEvent(req.body, signature, stripe.webhookSecret);
     } catch (err) {
       logger.error('Webhook signature verification failed:', err);
       return res.status(400).send(`Webhook Error: ${err.message}`);
