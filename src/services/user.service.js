@@ -1,8 +1,8 @@
-const User = require('../models/User');
-const Organization = require('../models/Organization');
-const AuditLog = require('../models/AuditLog');
+/* eslint-disable no-underscore-dangle */
 const { clerkClient } = require('@clerk/clerk-sdk-node');
-const { NotFoundError, ConflictError, ValidationError } = require('../utils/errors');
+const User = require('../models/User');
+const AuditLog = require('../models/AuditLog');
+const { NotFoundError, ValidationError } = require('../utils/errors');
 const { AUDIT_ACTIONS } = require('../utils/constants');
 const logger = require('../config/logger');
 
@@ -24,14 +24,14 @@ class UserService {
         email: userData.email,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        avatar: userData.avatar
+        avatar: userData.avatar,
       });
 
       await user.save();
 
       logger.info('User created successfully:', {
         userId: user.clerkId,
-        email: user.email
+        email: user.email,
       });
 
       return user;
@@ -47,7 +47,7 @@ class UserService {
   static async getUserById(clerkId) {
     try {
       const user = await User.findByClerkId(clerkId);
-      
+
       if (!user) {
         throw new NotFoundError('User');
       }
@@ -65,7 +65,7 @@ class UserService {
   static async updateUser(clerkId, updateData) {
     try {
       const user = await User.findByClerkId(clerkId);
-      
+
       if (!user) {
         throw new NotFoundError('User');
       }
@@ -78,7 +78,7 @@ class UserService {
         userId: clerkId,
         resourceType: 'user',
         resourceId: user._id.toString(),
-        details: updateData
+        details: updateData,
       });
 
       logger.info('User updated:', { userId: clerkId });
@@ -95,7 +95,7 @@ class UserService {
   static async deleteUser(clerkId) {
     try {
       const user = await User.findByClerkId(clerkId);
-      
+
       if (!user) {
         throw new NotFoundError('User');
       }
@@ -107,7 +107,7 @@ class UserService {
         userId: clerkId,
         resourceType: 'user',
         resourceId: user._id.toString(),
-        details: { deletedAt: new Date() }
+        details: { deletedAt: new Date() },
       });
 
       logger.info('User deleted:', { userId: clerkId });
@@ -138,20 +138,20 @@ class UserService {
   static async getUserProfile(clerkId) {
     try {
       const user = await this.getUserById(clerkId);
-      
+
       // Get user's organizations from Clerk
       const memberships = await clerkClient.users.getOrganizationMembershipList({
-        userId: clerkId
+        userId: clerkId,
       });
 
       return {
         ...user.toObject(),
-        organizations: memberships.map(m => ({
+        organizations: memberships.data.map((m) => ({
           id: m.organization.id,
           name: m.organization.name,
           role: m.role,
-          joinedAt: m.createdAt
-        }))
+          joinedAt: m.createdAt,
+        })),
       };
     } catch (error) {
       logger.error('Failed to get user profile:', error);
@@ -175,7 +175,7 @@ class UserService {
         role,
         status,
         sort = 'createdAt',
-        order = 'desc'
+        order = 'desc',
       } = query;
 
       // Build filter
@@ -185,7 +185,7 @@ class UserService {
         filter.$or = [
           { firstName: { $regex: search, $options: 'i' } },
           { lastName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
+          { email: { $regex: search, $options: 'i' } },
         ];
       }
 
@@ -201,10 +201,10 @@ class UserService {
         // Get organization members from Clerk
         const memberships = await clerkClient.organizations.getOrganizationMembershipList({
           organizationId,
-          limit: 100 // Adjust as needed
+          limit: 100, // Adjust as needed
         });
-        
-        const memberIds = memberships.map(m => m.publicUserData.userId);
+
+        const memberIds = memberships.map((m) => m.publicUserData.userId);
         filter.clerkId = { $in: memberIds };
       }
 
@@ -215,7 +215,7 @@ class UserService {
           .skip(skip)
           .select('-__v')
           .lean(),
-        User.countDocuments(filter)
+        User.countDocuments(filter),
       ]);
 
       return {
@@ -223,7 +223,7 @@ class UserService {
         total,
         page: parseInt(page),
         limit: parseInt(limit),
-        pages: Math.ceil(total / limit)
+        pages: Math.ceil(total / limit),
       };
     } catch (error) {
       logger.error('Failed to get users:', error);
@@ -249,7 +249,7 @@ class UserService {
         userId: clerkId,
         resourceType: 'user',
         resourceId: user._id.toString(),
-        details: { action: 'deactivated' }
+        details: { action: 'deactivated' },
       });
 
       logger.info('User deactivated:', { userId: clerkId });
@@ -278,7 +278,7 @@ class UserService {
         userId: clerkId,
         resourceType: 'user',
         resourceId: user._id.toString(),
-        details: { action: 'reactivated' }
+        details: { action: 'reactivated' },
       });
 
       logger.info('User reactivated:', { userId: clerkId });
@@ -294,18 +294,12 @@ class UserService {
    */
   static async getUserActivity(userId, query = {}) {
     try {
-      const {
-        page = 1,
-        limit = 50,
-        action,
-        startDate,
-        endDate
-      } = query;
+      const { page = 1, limit = 50, action, startDate, endDate } = query;
 
       const filter = { userId };
-      
+
       if (action) filter.action = action;
-      
+
       if (startDate || endDate) {
         filter.timestamp = {};
         if (startDate) filter.timestamp.$gte = new Date(startDate);
@@ -315,12 +309,8 @@ class UserService {
       const skip = (page - 1) * limit;
 
       const [logs, total] = await Promise.all([
-        AuditLog.find(filter)
-          .sort({ timestamp: -1 })
-          .limit(parseInt(limit))
-          .skip(skip)
-          .lean(),
-        AuditLog.countDocuments(filter)
+        AuditLog.find(filter).sort({ timestamp: -1 }).limit(parseInt(limit)).skip(skip).lean(),
+        AuditLog.countDocuments(filter),
       ]);
 
       return {
@@ -328,7 +318,7 @@ class UserService {
         total,
         page: parseInt(page),
         limit: parseInt(limit),
-        pages: Math.ceil(total / limit)
+        pages: Math.ceil(total / limit),
       };
     } catch (error) {
       logger.error('Failed to get user activity:', error);
@@ -339,11 +329,13 @@ class UserService {
   /**
    * Change password (redirects to Clerk)
    */
-  static async changePassword(clerkId, currentPassword, newPassword) {
+  static async changePassword() {
     try {
       // Since we're using Clerk, password changes should be handled through their API
       // This method exists for API consistency but redirects to proper flow
-      throw new ValidationError('Password changes must be done through your account settings in the authentication provider');
+      throw new ValidationError(
+        'Password changes must be done through your account settings in the authentication provider'
+      );
     } catch (error) {
       logger.error('Failed to change password:', error);
       throw error;
@@ -358,14 +350,14 @@ class UserService {
       // In production, you would upload to S3/CloudFront
       // For demo purposes, we'll create a placeholder URL
       const avatarUrl = `https://your-cdn.com/avatars/${clerkId}-${Date.now()}.${file.mimetype.split('/')[1]}`;
-      
+
       // Update user avatar URL in our database
       await this.updateUser(clerkId, { avatar: avatarUrl });
-      
+
       // Also update in Clerk
       try {
         await clerkClient.users.updateUser(clerkId, {
-          imageUrl: avatarUrl
+          imageUrl: avatarUrl,
         });
       } catch (clerkError) {
         logger.warn('Failed to update avatar in Clerk:', clerkError);
@@ -386,17 +378,17 @@ class UserService {
   static async getUserOrganizations(clerkId) {
     try {
       const memberships = await clerkClient.users.getOrganizationMembershipList({
-        userId: clerkId
+        userId: clerkId,
       });
 
-      const organizations = memberships.map(membership => ({
+      const organizations = memberships.map((membership) => ({
         id: membership.organization.id,
         name: membership.organization.name,
         slug: membership.organization.slug,
         role: membership.role,
         permissions: membership.permissions,
         joinedAt: membership.createdAt,
-        imageUrl: membership.organization.imageUrl
+        imageUrl: membership.organization.imageUrl,
       }));
 
       return organizations;
@@ -418,7 +410,7 @@ class UserService {
 
       // Get user's organizations
       const organizations = await this.getUserOrganizations(clerkId);
-      
+
       // Get recent activity
       const recentActivity = await AuditLog.find({ userId: clerkId })
         .sort({ timestamp: -1 })
@@ -435,25 +427,25 @@ class UserService {
           lastLogin: user.lastLoginAt,
           isActive: user.isActive,
           email: user.email,
-          fullName: user.fullName
+          fullName: user.fullName,
         },
         organizations: {
           total: organizations.length,
-          roles: organizations.map(org => ({ 
-            name: org.name, 
-            role: org.role 
-          }))
+          roles: organizations.map((org) => ({
+            name: org.name,
+            role: org.role,
+          })),
         },
         activity: {
           totalActions,
           recentActions: recentActivity.length,
           lastAction: recentActivity[0]?.timestamp,
-          recentActivitySummary: recentActivity.slice(0, 5).map(log => ({
+          recentActivitySummary: recentActivity.slice(0, 5).map((log) => ({
             action: log.action,
             timestamp: log.timestamp,
-            details: log.details
-          }))
-        }
+            details: log.details,
+          })),
+        },
       };
 
       return stats;

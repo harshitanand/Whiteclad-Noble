@@ -1,101 +1,84 @@
+// src/models/Agent.js - Updated to match your frontend forms
 const mongoose = require('mongoose');
 const { AGENT_TYPES, AGENT_STATUS } = require('../utils/constants');
 
 const agentSchema = new mongoose.Schema(
   {
+    // Identity fields (from form-new-agent-identity)
     name: {
       type: String,
       required: true,
       trim: true,
+      minlength: 3,
+      maxlength: 10,
+    },
+    language: {
+      type: String,
+      required: true,
+      enum: ['en', 'fr', 'de', 'es', 'pt', 'ru', 'ja', 'ko', 'zh'],
     },
     description: {
       type: String,
       required: true,
+      trim: true,
     },
-    type: {
-      type: String,
-      enum: Object.values(AGENT_TYPES),
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: Object.values(AGENT_STATUS),
-      default: AGENT_STATUS.DRAFT,
-    },
-    organizationId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    createdBy: {
-      type: String,
-      required: true,
-      index: true,
+    active: {
+      type: Boolean,
+      default: true,
     },
 
-    // AI Configuration
-    config: {
-      model: {
-        type: String,
-        required: true,
-        enum: ['gpt-4', 'gpt-3.5-turbo', 'claude-3-sonnet', 'claude-3-haiku'],
-      },
-      instructions: {
-        type: String,
-        required: true,
-        maxlength: 10000,
-      },
-      temperature: {
-        type: Number,
-        min: 0,
-        max: 2,
-        default: 0.7,
-      },
-      maxTokens: {
-        type: Number,
-        min: 1,
-        max: 4000,
-        default: 1000,
-      },
-      topP: {
-        type: Number,
-        min: 0,
-        max: 1,
-        default: 1,
-      },
-      frequencyPenalty: {
-        type: Number,
-        min: -2,
-        max: 2,
-        default: 0,
-      },
-      presencePenalty: {
-        type: Number,
-        min: -2,
-        max: 2,
-        default: 0,
-      },
+    // Persona fields (from form-new-agent-persona)
+    voiceType: {
+      type: String,
+      enum: ['male', 'female', 'neutral'],
+      required: true,
+    },
+    voice: {
+      type: String,
+      required: true, // Voice avatar name
     },
 
-    // Tools and capabilities
-    tools: [
+    // Work/Company Information (from form-new-agent-work)
+    companyName: {
+      type: String,
+      required: true,
+      minlength: 2,
+    },
+    productDescription: {
+      type: String,
+      required: true,
+      minlength: 10,
+    },
+    questions: [
       {
-        type: {
+        id: {
           type: String,
           required: true,
-          enum: ['web_search', 'calculator', 'code_interpreter', 'file_upload', 'api_call'],
         },
-        name: String,
-        description: String,
-        config: mongoose.Schema.Types.Mixed,
-        isEnabled: {
-          type: Boolean,
-          default: true,
+        question: {
+          type: String,
+          required: true,
+          minlength: 5,
+        },
+        number: {
+          type: Number,
+          required: true,
+          min: 1,
         },
       },
     ],
+    faqs: {
+      type: String,
+      required: true,
+      minlength: 20,
+    },
+    agentIntroduction: {
+      type: String,
+      required: true,
+      minlength: 50,
+    },
 
-    // Knowledge base
+    // Knowledge Base (from form-new-agent-knowledgebase)
     knowledgeBase: [
       {
         id: String,
@@ -114,6 +97,55 @@ const agentSchema = new mongoose.Schema(
       },
     ],
 
+    // Original fields maintained for compatibility
+    type: {
+      type: String,
+      enum: Object.values(AGENT_TYPES),
+      default: AGENT_TYPES.ASSISTANT,
+    },
+    status: {
+      type: String,
+      enum: Object.values(AGENT_STATUS),
+      default: AGENT_STATUS.DRAFT,
+    },
+    organizationId: {
+      type: String,
+      required: true,
+      index: true,
+    },
+    createdBy: {
+      type: String,
+      required: true,
+      index: true,
+    },
+
+    // AI Configuration (enhanced)
+    config: {
+      model: {
+        type: String,
+        required: true,
+        enum: ['gpt-4', 'gpt-3.5-turbo', 'claude-3-sonnet', 'claude-3-haiku'],
+        default: 'gpt-3.5-turbo',
+      },
+      instructions: {
+        type: String,
+        required: true,
+        maxlength: 10000,
+      },
+      temperature: {
+        type: Number,
+        min: 0,
+        max: 2,
+        default: 0.7,
+      },
+      maxTokens: {
+        type: Number,
+        min: 1,
+        max: 4000,
+        default: 1000,
+      },
+    },
+
     // Visibility and sharing
     visibility: {
       type: String,
@@ -124,21 +156,6 @@ const agentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    sharedWith: [
-      {
-        userId: String,
-        permissions: [
-          {
-            type: String,
-            enum: ['read', 'execute', 'edit'],
-          },
-        ],
-        sharedAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
 
     // Metadata and analytics
     tags: [
@@ -154,10 +171,6 @@ const agentSchema = new mongoose.Schema(
     version: {
       type: Number,
       default: 1,
-    },
-    parentAgentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Agent',
     },
 
     // Analytics
@@ -214,97 +227,70 @@ agentSchema.index({ tags: 1 });
 agentSchema.index({ type: 1, category: 1 });
 agentSchema.index({ isPublic: 1, status: 1 });
 
-// Virtual for formatted analytics
-agentSchema.virtual('formattedAnalytics').get(function () {
-  return {
-    ...this.analytics,
-    averageResponseTime: `${this.analytics.averageResponseTime}ms`,
-    successRate: `${this.analytics.successRate}%`,
-  };
-});
-
-// Instance methods
-agentSchema.methods.incrementUsage = function () {
-  this.analytics.totalConversations += 1;
-  this.analytics.usageThisMonth += 1;
-  this.analytics.lastUsedAt = new Date();
+// Methods for your multi-step form flow
+agentSchema.methods.updateIdentity = function(identityData) {
+  this.name = identityData.name;
+  this.language = identityData.language;
+  this.description = identityData.description;
+  this.active = identityData.active;
   return this.save();
 };
 
-agentSchema.methods.updateAnalytics = function (responseTime, success = true) {
-  const { analytics } = this;
-  analytics.totalMessages += 1;
-
-  // Update average response time
-  const totalResponses = analytics.totalMessages;
-  analytics.averageResponseTime =
-    (analytics.averageResponseTime * (totalResponses - 1) + responseTime) / totalResponses;
-
-  // Update success rate
-  if (!success) {
-    const successfulMessages =
-      Math.floor(analytics.totalMessages * (analytics.successRate / 100)) - 1;
-    analytics.successRate = (successfulMessages / analytics.totalMessages) * 100;
-  }
-
+agentSchema.methods.updatePersona = function(personaData) {
+  this.voiceType = personaData.voiceType;
+  this.voice = personaData.voice;
   return this.save();
 };
 
-agentSchema.methods.publish = function (publishedBy) {
-  this.status = AGENT_STATUS.PUBLISHED;
-  this.publishedAt = new Date();
-  this.publishedBy = publishedBy;
+agentSchema.methods.updateWork = function(workData) {
+  this.companyName = workData.companyName;
+  this.productDescription = workData.productDescription;
+  this.questions = workData.questions;
+  this.faqs = workData.faqs;
+  this.agentIntroduction = workData.agentIntroduction;
+  
+  // Auto-generate AI instructions from the work data
+  this.config.instructions = this.generateInstructions();
+  
   return this.save();
 };
 
-agentSchema.methods.clone = function (newOwnerId, newOrganizationId) {
-  const clonedAgent = new this.constructor({
-    ...this.toObject(),
-    _id: undefined,
-    name: `${this.name} (Copy)`,
-    createdBy: newOwnerId,
-    organizationId: newOrganizationId,
-    parentAgentId: this._id,
-    status: AGENT_STATUS.DRAFT,
-    publishedAt: undefined,
-    publishedBy: undefined,
-    analytics: {
-      totalConversations: 0,
-      totalMessages: 0,
-      averageResponseTime: 0,
-      successRate: 100,
-      usageThisMonth: 0,
-    },
-    createdAt: undefined,
-    updatedAt: undefined,
-  });
+agentSchema.methods.generateInstructions = function() {
+  return `You are an AI assistant for ${this.companyName}. 
 
-  return clonedAgent.save();
-};
+Product Information:
+${this.productDescription}
 
-agentSchema.methods.softDelete = function () {
-  this.deletedAt = new Date();
-  this.isActive = false;
-  return this.save();
+Introduction Script:
+${this.agentIntroduction}
+
+Key Questions to Address:
+${this.questions.map(q => `${q.number}. ${q.question}`).join('\n')}
+
+Frequently Asked Questions:
+${this.faqs}
+
+Voice Type: ${this.voiceType}
+Language: ${this.language}
+
+Always be helpful, professional, and stay on topic about ${this.companyName} and its products/services.`;
 };
 
 // Static methods
-agentSchema.statics.findByOrganization = function (organizationId, filters = {}) {
-  return this.find({
+agentSchema.statics.createDraft = function(userId, organizationId) {
+  return this.create({
+    name: '',
+    language: 'en',
+    description: '',
     organizationId,
-    isActive: true,
-    deletedAt: null,
-    ...filters,
-  });
-};
-
-agentSchema.statics.findPublicAgents = function (filters = {}) {
-  return this.find({
-    isPublic: true,
-    status: AGENT_STATUS.PUBLISHED,
-    isActive: true,
-    deletedAt: null,
-    ...filters,
+    createdBy: userId,
+    status: AGENT_STATUS.DRAFT,
+    config: {
+      model: 'gpt-3.5-turbo',
+      instructions: '',
+      temperature: 0.7,
+      maxTokens: 1000,
+    }
   });
 };
 

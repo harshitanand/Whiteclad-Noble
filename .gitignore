@@ -59,6 +59,7 @@ jspm_packages/
 *.tgz
 
 # Yarn Integrity file
+.yarn/
 .yarn-integrity
 
 # dotenv environment variables file

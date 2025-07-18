@@ -1,4 +1,3 @@
-// src/controllers/agent.controller.js - AI Agent controller
 const AgentService = require('../services/agent.service');
 const PermissionService = require('../services/permission.service');
 const { catchAsync } = require('../middleware/error.middleware.js');
@@ -188,6 +187,118 @@ class AgentController {
     res.json({
       success: true,
       data: { analytics },
+    });
+  });
+
+  /**
+   * Create draft agent for multi-step form
+   */
+  static createDraftAgent = catchAsync(async (req, res) => {
+    const { userId, orgId } = req.auth;
+
+    const agent = await AgentService.createDraftAgent(userId, orgId);
+
+    logger.info('Draft agent created:', {
+      agentId: agent._id,
+      createdBy: userId,
+    });
+
+    res.status(HTTP_STATUS.CREATED).json({
+      success: true,
+      message: 'Draft agent created successfully',
+      data: { agent },
+    });
+  });
+
+  /**
+   * Update agent identity (Step 1)
+   */
+  static updateAgentIdentity = catchAsync(async (req, res) => {
+    const { userId, orgId } = req.auth;
+    const { role: userRole } = req.membership;
+    const { agentId } = req.params;
+
+    const agent = await AgentService.updateAgentIdentity(
+      agentId,
+      req.body,
+      userId,
+      orgId,
+      userRole
+    );
+
+    logger.info('Agent identity updated:', {
+      agentId: agent._id,
+      updatedBy: userId,
+    });
+
+    res.json({
+      success: true,
+      message: 'Agent identity updated successfully',
+      data: { agent },
+    });
+  });
+
+  /**
+   * Update agent persona (Step 2)
+   */
+  static updateAgentPersona = catchAsync(async (req, res) => {
+    const { userId, orgId } = req.auth;
+    const { role: userRole } = req.membership;
+    const { agentId } = req.params;
+
+    const agent = await AgentService.updateAgentPersona(agentId, req.body, userId, orgId, userRole);
+
+    logger.info('Agent persona updated:', {
+      agentId: agent._id,
+      updatedBy: userId,
+    });
+
+    res.json({
+      success: true,
+      message: 'Agent persona updated successfully',
+      data: { agent },
+    });
+  });
+
+  /**
+   * Update agent work (Step 3)
+   */
+  static updateAgentWork = catchAsync(async (req, res) => {
+    const { userId, orgId } = req.auth;
+    const { role: userRole } = req.membership;
+    const { agentId } = req.params;
+
+    const agent = await AgentService.updateAgentWork(agentId, req.body, userId, orgId, userRole);
+
+    logger.info('Agent work updated:', {
+      agentId: agent._id,
+      updatedBy: userId,
+    });
+
+    res.json({
+      success: true,
+      message: 'Agent work configuration updated successfully',
+      data: { agent },
+    });
+  });
+
+  /**
+   * Handle demo form submission
+   */
+  static handleDemoSubmission = catchAsync(async (req, res) => {
+    const { userId, orgId } = req.auth;
+
+    const result = await AgentService.handleDemoSubmission(req.body, userId, orgId);
+
+    logger.info('Demo form submitted:', {
+      agentName: req.body.agentName,
+      userId,
+    });
+
+    res.json({
+      success: true,
+      message: 'Demo form submitted successfully',
+      data: result,
     });
   });
 }

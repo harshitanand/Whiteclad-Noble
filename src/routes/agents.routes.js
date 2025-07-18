@@ -11,10 +11,34 @@ const { agentSchemas, commonSchemas } = require('../utils/validation');
 const router = express.Router();
 
 // Apply auth middleware to all routes
-// router.use(requireAuth);
-// router.use(requireOrganization);
+router.use(requireAuth);
+router.use(requireOrganization);
 
-// Agent CRUD routes
+// Multi-step agent creation (matching your frontend flow)
+router.post('/draft', AgentController.createDraftAgent); // Create empty draft
+
+router.put(
+  '/:agentId/identity',
+  validateParams({ agentId: commonSchemas.id }),
+  validateBody(agentSchemas.createIdentity),
+  AgentController.updateAgentIdentity
+);
+
+router.put(
+  '/:agentId/persona',
+  validateParams({ agentId: commonSchemas.id }),
+  validateBody(agentSchemas.updatePersona),
+  AgentController.updateAgentPersona
+);
+
+router.put(
+  '/:agentId/work',
+  validateParams({ agentId: commonSchemas.id }),
+  validateBody(agentSchemas.updateWork),
+  AgentController.updateAgentWork
+);
+
+// Original Agent CRUD routes (maintained for compatibility)
 router
   .route('/')
   .get(validateQuery(agentSchemas.query), AgentController.getAgents)
@@ -43,11 +67,19 @@ router.post(
   AgentController.cloneAgent
 );
 
+// Chat endpoints
 router.post(
   '/:agentId/chat',
   validateParams({ agentId: commonSchemas.id }),
   validateBody(agentSchemas.chat),
   AgentController.chatWithAgent
+);
+
+// Demo form endpoint (form-demo.tsx)
+router.post(
+  '/demo/submit',
+  validateBody(agentSchemas.demoSubmission),
+  AgentController.handleDemoSubmission
 );
 
 // Analytics

@@ -25,7 +25,7 @@ const webCallSchema = Joi.object({
 const sipCallSchema = Joi.object({
   agentId: commonSchemas.id.required(),
   phoneNumber: Joi.string()
-    .pattern(/^\+?[\d\s\-\(\)]+$/)
+    .pattern(/^\+?[\d\s\-()]+$/)
     .required(),
   participantName: Joi.string().min(1).max(50),
   duration: Joi.number().min(60).max(3600).default(1800), // 1 minute to 1 hour
@@ -90,6 +90,14 @@ router.delete(
   '/dispatches/:dispatchId',
   validateParams({ dispatchId: Joi.string().required() }),
   CallsController.cancelAgentDispatch
+);
+
+// Call metadata update route
+router.patch(
+  '/:roomName/metadata',
+  validateParams({ roomName: Joi.string().required() }),
+  validateBody(updateMetadataSchema),
+  CallsController.updateCallMetadata
 );
 
 module.exports = router;
